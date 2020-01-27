@@ -13,6 +13,7 @@ public:
    TCPServer();
    ~TCPServer();
 
+   bool authIP(std::string &ipAddr);
    void bindSvr(const char *ip_addr, unsigned short port);
    void listenSvr();
    void shutdown();

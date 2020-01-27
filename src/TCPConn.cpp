@@ -4,6 +4,7 @@
 #include <cstring>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 #include "TCPConn.h"
 #include "strfuncts.h"
 
@@ -63,6 +64,7 @@ void TCPConn::startAuthentication() {
    _status = s_username;
 
    _connfd.writeFD("Username: "); 
+   
 }
 
 /**********************************************************************************************
@@ -120,6 +122,32 @@ void TCPConn::handleConnection() {
 
 void TCPConn::getUsername() {
    // Insert your mind-blowing code here
+   int auth = false;
+
+   // take username input
+   if (getUserInput(_username)){
+      std::fstream users("Users.txt");
+      std::string evalUser;
+
+      // compare username with authorized user list
+      while (std::getline(users, evalUser)){
+         clrNewlines(evalUser);
+         if ( _username.compare(evalUser) == 0 ){
+            auth = true;
+            break;
+         }
+      }
+      users.close();
+
+      // request password if authorized or disconnect
+      if (auth == true){
+         _status = s_passwd;
+      }
+      else {
+         this->sendText("Unauthorized\n");
+         disconnect();
+      }
+   }
 }
 
 /**********************************************************************************************

@@ -5,9 +5,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdexcept>
+#include <string>
 #include <strings.h>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <sstream>
 #include "TCPServer.h"
@@ -73,17 +75,28 @@ void TCPServer::listenSvr() {
          }
          std::cout << "***Got a connection***\n";
 
+         // Add connection to list and send banner msg
          _connlist.push_back(std::unique_ptr<TCPConn>(new_conn));
+         
 
          // Get their IP Address string to use in logging
          std::string ipaddr_str;
          new_conn->getIPAddrStr(ipaddr_str);
 
+         //std::cout << ipaddr_str << "\n";
 
-         new_conn->sendText("Welcome to the CSCE 689 Server!\n");
+         // check if IP is authorized to connect
+         if (!authIP(ipaddr_str)) {
+            new_conn->sendText("Connection failed!\n");
+            new_conn->disconnect();
+            break;
+         }
+         else {         
+            new_conn->sendText("Welcome to the CSCE 689 Server!\n");
 
-         // Change this later
-         new_conn->startAuthentication();
+            // Change this later
+            new_conn->startAuthentication();
+         }  
       }
 
       // Loop through our connections, handling them
@@ -110,11 +123,22 @@ void TCPServer::listenSvr() {
       // So we're not chewing up CPU cycles unnecessarily
       nanosleep(&sleeptime, NULL);
    } 
-
-
-   
 }
 
+
+bool TCPServer::authIP(std::string &ipAddr){
+   std::fstream infile("Authorized_IPs.txt");
+   std::string evalIP;
+   bool auth = false;
+   while (std::getline(infile, evalIP)){
+      if ( ipAddr.compare(evalIP) == 0 ){
+         auth = true;
+         break;
+      }
+   }
+   infile.close();
+   return auth;
+}
 
 /**********************************************************************************************
  * shutdown - Cleanly closes the socket FD.
