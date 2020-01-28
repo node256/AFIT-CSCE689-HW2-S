@@ -7,6 +7,7 @@
 #include <fstream>
 #include "TCPConn.h"
 #include "strfuncts.h"
+#include "PasswdMgr.h"
 
 // The filename/path of the password file
 const char pwdfilename[] = "passwd";
@@ -122,25 +123,12 @@ void TCPConn::handleConnection() {
 
 void TCPConn::getUsername() {
    // Insert your mind-blowing code here
-   int auth = false;
+
+   PasswdMgr sec(pwdfilename);
 
    // take username input
-   if (getUserInput(_username)){
-      std::fstream users("Users.txt");
-      std::string evalUser;
-
-      // compare username with authorized user list
-      while (std::getline(users, evalUser)){
-         clrNewlines(evalUser);
-         if ( _username.compare(evalUser) == 0 ){
-            auth = true;
-            break;
-         }
-      }
-      users.close();
-
-      // request password if authorized or disconnect
-      if (auth == true){
+   if (getUserInput(_username)){ 
+      if ( sec.checkUser(_username.c_str())){
          _status = s_passwd;
       }
       else {
@@ -160,6 +148,8 @@ void TCPConn::getUsername() {
 
 void TCPConn::getPasswd() {
    // Insert your astounding code here
+   // while auth get password and send to server
+   // 
 }
 
 /**********************************************************************************************

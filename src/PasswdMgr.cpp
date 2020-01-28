@@ -8,6 +8,7 @@
 #include "PasswdMgr.h"
 #include "FileDesc.h"
 #include "strfuncts.h"
+#include "exceptions.h"
 
 const int hashlen = 32;
 const int saltlen = 16;
@@ -189,6 +190,41 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
                            const char *in_passwd, std::vector<uint8_t> *in_salt) {
    // Hash those passwords!!!!
 
+   // Create temp hash container
+   uint8_t hash[hashlen];
+   
+   // check salt size, error if not proper len or 0
+   if ( in_salt->size() != saltlen){
+      if (in_salt->size() != 0){
+         throw std::runtime_error("Salt is not the right size\n");
+      }
+   }
+
+   // Generate salt if none was passed as arguement
+   if (in_salt->size() == 0){
+
+      // generate random seed
+      srand(time(NULL));
+
+      // create randomized salt of appropriate length
+      for ( int i = 0; i < saltlen; i++){
+         in_salt->push_back(rand());
+      }
+   }
+
+   // convert input password to byte string
+   uint8_t *pwd = (uint8_t *)strdup(in_passwd);
+   uint32_t pwdlen = strlen((char *)pwd);
+
+   // Set hash parameters
+   uint32_t t_cost = 2;
+   uint32_t m_cost = (1<<16);
+   uint32_t parallelism = 1;
+
+   // perform the hash and store in the tmp holder
+   argon2i_hash_raw(t_cost, m_cost, parallelism, pwd, pwdlen, in_salt, saltlen, &ret_hash, hashlen);
+
+   // need to return the salt value somehow
 }
 
 /****************************************************************************************************
@@ -200,5 +236,9 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
 
 void PasswdMgr::addUser(const char *name, const char *passwd) {
    // Add those users!
+
+   // Genrate salt
+
+
 }
 

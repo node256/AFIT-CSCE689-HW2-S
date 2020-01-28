@@ -83,8 +83,6 @@ void TCPServer::listenSvr() {
          std::string ipaddr_str;
          new_conn->getIPAddrStr(ipaddr_str);
 
-         //std::cout << ipaddr_str << "\n";
-
          // check if IP is authorized to connect
          if (!authIP(ipaddr_str)) {
             new_conn->sendText("Connection failed!\n");
