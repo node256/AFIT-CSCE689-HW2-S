@@ -87,7 +87,6 @@ void TCPServer::listenSvr() {
          if (!authIP(ipaddr_str)) {
             new_conn->sendText("Connection failed!\n");
             new_conn->disconnect();
-            break;
          }
          else {         
             new_conn->sendText("Welcome to the CSCE 689 Server!\n");
@@ -125,7 +124,7 @@ void TCPServer::listenSvr() {
 
 
 bool TCPServer::authIP(std::string &ipAddr){
-   std::fstream infile("Authorized_IPs.txt");
+   std::fstream infile("whitelist");
    std::string evalIP;
    bool auth = false;
    while (std::getline(infile, evalIP)){
