@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 #include <cstring>
 #include <list>
@@ -130,6 +131,19 @@ int PasswdMgr::writeUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
 
    // Insert your wild code here!
 
+   // open password file for write
+   if (!pwfile.openFile(FileFD::appendfd)){
+      throw pwfile_error("Could not open passwd file for reading");
+   }
+
+   pwfile.writeFD(name);
+   pwfile.writeFD("\n");
+   pwfile.writeBytes(hash);
+   pwfile.writeBytes(salt);
+   pwfile.writeFD("\n");
+
+   results = sizeof(name) + sizeof(hash) + sizeof(salt) + 2;
+
    return results; 
 }
 
@@ -193,12 +207,12 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
    // Hash those passwords!!!!
    
    // check salt size, error if not proper len or 0
-   if ( in_salt->size() != saltlen || in_salt->size() != 0 ){
+   if ( (uint8_t)in_salt->capacity() != (uint8_t)saltlen && in_salt->capacity() != 0 ){
          throw std::runtime_error("Invalid salt length\n");
    }
 
    // Generate salt if none was passed as arguement
-   if (in_salt->size() == 0){
+   if ((uint8_t)in_salt->capacity() == 0){
 
       // generate random seed
       srand(time(NULL));
@@ -236,8 +250,19 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
 void PasswdMgr::addUser(const char *name, const char *passwd) {
    // Add those users!
 
-   
+   // if user doesn't exist, add to passwd file, else error
+   //if (!checkUser(name)){
 
+      // set up variables
+      std::string uname = name;
+      std::vector<uint8_t> hash, salt;
 
+      // create the passwd hash
+      hashArgon2(hash,salt,passwd, NULL);
+
+      // write username\nhashsalt\n to passwd file
+      FileFD pwfile(_pwd_file.c_str());
+      writeUser(pwfile, uname, hash, salt);
+   //}
 }
 

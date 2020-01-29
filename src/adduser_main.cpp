@@ -39,11 +39,12 @@ int main(int argc, char *argv[]) {
    std::vector<uint8_t> hash, salt;
    PasswdMgr pwm("passwd");
    
-   if (pwm.checkUser(username.c_str()))
+   // commented to test write
+   /*if (pwm.checkUser(username.c_str()))
    {
       cerr << "That user already has an account.\n";
       exit(-1); 
-   }
+   }*/
 
    TermFD stdinFD;
 
