@@ -95,6 +95,7 @@ bool PasswdMgr::changePasswd(const char *name, const char *passwd) {
  * readUser - Taking in an opened File Descriptor of the password file, reads in a user entry and
  *            loads the passed in variables
  *
+
  *    Params:  pwfile - FileDesc of password file already opened for reading
  *             name - std string to store the name read in
  *             hash, salt - vectors to store the read-in hash and salt respectively
@@ -142,6 +143,7 @@ int PasswdMgr::writeUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
    pwfile.writeBytes(salt);
    pwfile.writeFD("\n");
 
+   // bytes written
    results = sizeof(name) + sizeof(hash) + sizeof(salt) + 2;
 
    return results; 
@@ -206,23 +208,25 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
                            const char *in_passwd, std::vector<uint8_t> *in_salt) {
    // Hash those passwords!!!!
    
-   // check salt size, error if not proper len or 0
-   if ( (uint8_t)in_salt->capacity() != (uint8_t)saltlen && in_salt->capacity() != 0 ){
-         throw std::runtime_error("Invalid salt length\n");
-   }
+   // if no salt vector passed, create new radomized of appropriate length
+   if ( in_salt == NULL) {
 
-   // Generate salt if none was passed as arguement
-   if ((uint8_t)in_salt->capacity() == 0){
+      // create salt vector
+         std::vector<uint8_t> tmp;
+         in_salt = &tmp;
 
       // generate random seed
       srand(time(NULL));
 
-      // create randomized salt of appropriate length
+      // populate salt
       for ( int i = 0; i < saltlen; i++){
          in_salt->push_back(rand());
       }
    }
-
+   else if ( in_salt->capacity() != saltlen ){
+      throw std::runtime_error("Invalid salt length\n");
+   }
+   
    // convert input password to byte string
    uint8_t *pwd = (uint8_t *)strdup(in_passwd);
    uint32_t pwdlen = strlen((char *)pwd);
@@ -232,7 +236,7 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
    uint32_t m_cost = (1<<16);
    uint32_t parallelism = 1;
 
-   // perform the hash and store in the tmp holder
+   // perform the hash and store return hash
    argon2i_hash_raw(t_cost, m_cost, parallelism, pwd, pwdlen, in_salt, saltlen, &ret_hash, hashlen);
 
    // copy input salt to return salt
