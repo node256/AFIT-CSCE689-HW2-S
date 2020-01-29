@@ -208,40 +208,39 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
                            const char *in_passwd, std::vector<uint8_t> *in_salt) {
    // Hash those passwords!!!!
    
-   // if no salt vector passed, create new radomized of appropriate length
-   if ( in_salt == NULL) {
-
-      // create salt vector
-         std::vector<uint8_t> tmp;
-         in_salt = &tmp;
-
-      // generate random seed
-      srand(time(NULL));
-
-      // populate salt
-      for ( int i = 0; i < saltlen; i++){
-         in_salt->push_back(rand());
-      }
-   }
-   else if ( in_salt->capacity() != saltlen ){
-      throw std::runtime_error("Invalid salt length\n");
-   }
-   
-   // convert input password to byte string
-   uint8_t *pwd = (uint8_t *)strdup(in_passwd);
-   uint32_t pwdlen = strlen((char *)pwd);
-
-   // Set hash parameters
+   // create hashing parameters
+   uint8_t hash[hashlen];
+   uint8_t salt[saltlen];
+   uint32_t pwdlen = strlen(in_passwd);
    uint32_t t_cost = 2;
    uint32_t m_cost = (1<<16);
    uint32_t parallelism = 1;
+   
+   // populate salt
+   // gen random salt if none passed
+   if ( in_salt == NULL) {
+      srand((unsigned)time(NULL));
+      for ( int i = 0; i < saltlen; i++){
+         salt[i] = rand();
+      }
+   }
+   // copy salt if proper length
+   else if ( in_salt->capacity() == saltlen ){
+      std::copy(in_salt->begin(), in_salt->end(), salt);
+   }
+   // error if salt is the wrong size
+   else {
+      throw std::runtime_error("Invalid salt length\n");
+   }
+ 
+   // populate hash
+   argon2i_hash_raw(t_cost, m_cost, parallelism, in_passwd, pwdlen, in_salt, saltlen, hash, hashlen);
 
-   // perform the hash and store return hash
-   argon2i_hash_raw(t_cost, m_cost, parallelism, pwd, pwdlen, in_salt, saltlen, &ret_hash, hashlen);
-
-   // copy input salt to return salt
+   // copy hash & salt to ret hash & salt
+   ret_hash.clear();
+   ret_hash.insert(ret_hash.end(), &hash[0], &hash[hashlen]);
    ret_salt.clear();
-   copy(in_salt->begin(), in_salt->end(), back_inserter(ret_salt));
+   ret_salt.insert(ret_salt.end(), &salt[0], &salt[saltlen]);
 }
 
 /****************************************************************************************************
