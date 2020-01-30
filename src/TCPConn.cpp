@@ -186,6 +186,36 @@ void TCPConn::getPasswd() {
 
 void TCPConn::changePassword() {
    // Insert your amazing code here
+
+   PasswdMgr sec(pwdfilename);
+   std::string conpwd;
+
+   if (_status == s_changepwd){
+      if (getUserInput(_newpwd)){
+         _status = s_confirmpwd;
+      }
+      else{
+         this->sendText("Enter new password:");
+      }
+   }
+   if ( _status == s_confirmpwd ){
+      this->sendText("Confirm password:");
+      if (getUserInput(conpwd)){
+         if (_newpwd.compare(conpwd) == 0){
+               // change passwd code
+               // find user in pwfile
+               // recalc salt and hash
+               // overwrite hash and salt?
+               this->sendText("Password changed\n");
+               _status = s_menu;
+         }
+         else {
+            this->sendText("Passwords do not match, try again\n");
+            _status = s_changepwd;
+         }
+      }
+   }
+      
 }
 
 
