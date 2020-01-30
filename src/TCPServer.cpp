@@ -122,6 +122,11 @@ void TCPServer::listenSvr() {
    } 
 }
 
+/**********************************************************************************************
+ * AuthIP - compares client IP address with system whitelist
+ * 
+ *    Returns: true if authorize, false if not
+ **********************************************************************************************/
 
 bool TCPServer::authIP(std::string &ipAddr){
    std::fstream infile("whitelist");

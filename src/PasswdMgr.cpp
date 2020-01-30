@@ -38,7 +38,6 @@ bool PasswdMgr::checkUser(const char *name) {
    bool result = findUser(name, passwd, salt);
 
    return result;
-     
 }
 
 /*******************************************************************************************
@@ -110,6 +109,25 @@ bool PasswdMgr::readUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
 {
    // Insert your perfect code here!
 
+   // tmp char to hold excess newlines
+   unsigned char tmp;
+
+ 
+   // read name, hash, and salt
+   // return false if eof(zero bytes read)
+   if (pwfile.readStr(name) == 0){ 
+      return false;
+   }
+   if (pwfile.readBytes(hash, hashlen) == 0){
+      return false;
+   }
+   if (pwfile.readBytes(salt, saltlen) == 0 ){
+      return false;
+   }
+   if (pwfile.readByte(tmp) == 0){
+      return false;
+   }   
+
    return true;
 }
 
@@ -134,14 +152,24 @@ int PasswdMgr::writeUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
 
    // open password file for write
    if (!pwfile.openFile(FileFD::appendfd)){
-      throw pwfile_error("Could not open passwd file for reading");
+      throw pwfile_error("Could not open passwd file for append");
    }
 
-   pwfile.writeFD(name);
-   pwfile.writeFD("\n");
-   pwfile.writeBytes(hash);
-   pwfile.writeBytes(salt);
-   pwfile.writeFD("\n");
+   if ( pwfile.writeFD(name) < 0 ){
+      throw pwfile_error("User write failed");
+   }
+   if ( pwfile.writeFD("\n") < 0 ){
+      throw pwfile_error("User delim write failed");
+   }
+   if ( pwfile.writeBytes(hash) < 0 ){
+      throw pwfile_error("hash write failed");
+   }
+   if ( pwfile.writeBytes(salt) < 0){
+      throw pwfile_error("salt write failed");
+   }
+   if ( pwfile.writeFD("\n") < 0 ){
+      throw pwfile_error("salt delim write failed");
+   }
 
    // bytes written
    results = sizeof(name) + sizeof(hash) + sizeof(salt) + 2;
@@ -221,7 +249,7 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
    if ( in_salt == NULL) {
       srand((unsigned)time(NULL));
       for ( int i = 0; i < saltlen; i++){
-         salt[i] = rand();
+         salt[i] = rand() % 255;
       }
    }
    // copy salt if proper length
@@ -234,7 +262,7 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
    }
  
    // populate hash
-   argon2i_hash_raw(t_cost, m_cost, parallelism, in_passwd, pwdlen, in_salt, saltlen, hash, hashlen);
+   argon2i_hash_raw(t_cost, m_cost, parallelism, in_passwd, pwdlen, salt, saltlen, hash, hashlen);
 
    // copy hash & salt to ret hash & salt
    ret_hash.clear();
@@ -253,8 +281,8 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
 void PasswdMgr::addUser(const char *name, const char *passwd) {
    // Add those users!
 
-   // if user doesn't exist, add to passwd file, else error
-   //if (!checkUser(name)){
+   // if user doesn't exist, add to passwd file
+   if (!checkUser(name)){
 
       // set up variables
       std::string uname = name;
@@ -266,6 +294,6 @@ void PasswdMgr::addUser(const char *name, const char *passwd) {
       // write username\nhashsalt\n to passwd file
       FileFD pwfile(_pwd_file.c_str());
       writeUser(pwfile, uname, hash, salt);
-   //}
+   }
 }
 

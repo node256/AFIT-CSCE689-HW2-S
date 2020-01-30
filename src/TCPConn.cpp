@@ -148,8 +148,31 @@ void TCPConn::getUsername() {
 
 void TCPConn::getPasswd() {
    // Insert your astounding code here
-   // while auth get password and send to server
-   // 
+
+   PasswdMgr sec(pwdfilename);
+   _pwd_attempts = 0;
+   
+   // give 2 attempts to correctly enter password
+   while (_pwd_attempts < 2 ){
+      // send password prompt
+      this->sendText("Password:");
+
+      // if user/password is good, proceed to menu
+      if (getUserInput(_newpwd)){ 
+         if ( sec.checkPasswd(_username.c_str(), _newpwd.c_str())){
+            _status = s_menu;
+            this->sendMenu();
+            break;
+         }
+         _pwd_attempts++;
+      }
+   }
+
+   // disconnect if user failed to provide good password
+   if (_status != s_menu ){
+      this->sendText("Unauthorized\n");
+      disconnect();
+   }
 }
 
 /**********************************************************************************************
