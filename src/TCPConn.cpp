@@ -210,7 +210,7 @@ void TCPConn::changePassword() {
                _status = s_menu;
          }
          else {
-            this->sendText("Passwords do not match, try again\n");
+            this->sendText("Passwords do not match, try again\nNew password:");
             _status = s_changepwd;
          }
       }
