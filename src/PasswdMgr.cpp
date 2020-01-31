@@ -87,6 +87,31 @@ bool PasswdMgr::changePasswd(const char *name, const char *passwd) {
 
    // Insert your insane code here
 
+   // temp variables
+   std::vector<uint8_t> hash, salt;
+   uint8_t hash_arr[hashlen];
+   uint8_t salt_arr[saltlen];
+   std::string input;
+   char tmp;
+
+   // open password file for binary read/write
+   std::fstream pass_file;
+   pass_file.open(_pwd_file, std::ios::in | std::ios::out | std::ios::binary);
+
+   // read strings until username matches
+   while ( std::getline(pass_file, input) ){    
+      if ( name == input ){
+
+         // write new hash & salt to user entry
+         hashArgon2(hash,salt,passwd);
+         pass_file.write(reinterpret_cast<char*>(&hash[0]), hashlen);
+         pass_file.write(reinterpret_cast<char*>(&salt[0]), saltlen);
+         break;
+      }
+   }
+
+   pass_file.close();
+
    return true;
 }
 

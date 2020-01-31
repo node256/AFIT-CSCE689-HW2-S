@@ -202,10 +202,8 @@ void TCPConn::changePassword() {
       this->sendText("Confirm password:");
       if (getUserInput(conpwd)){
          if (_newpwd.compare(conpwd) == 0){
-               // change passwd code
-               // find user in pwfile
-               // recalc salt and hash
-               // overwrite hash and salt?
+               clrNewlines(_newpwd);
+               sec.changePasswd(_username.c_str(),_newpwd.c_str());
                this->sendText("Password changed\n");
                _status = s_menu;
          }
@@ -214,8 +212,7 @@ void TCPConn::changePassword() {
             _status = s_changepwd;
          }
       }
-   }
-      
+   }   
 }
 
 
