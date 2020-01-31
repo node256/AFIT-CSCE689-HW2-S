@@ -12,11 +12,12 @@
 #include <fstream>
 #include <memory>
 #include <sstream>
+#include <time.h>
 #include "TCPServer.h"
 
 TCPServer::TCPServer(){ // :_server_log("server.log", 0) {
+   _server_log.open("server.log", std::ios::app);
 }
-
 
 TCPServer::~TCPServer() {
 
@@ -34,6 +35,8 @@ void TCPServer::bindSvr(const char *ip_addr, short unsigned int port) {
    struct sockaddr_in servaddr;
 
    // _server_log.writeLog("Server started.");
+   writeLog("Server started.");
+
 
    // Set the socket to nonblocking
    _sockfd.setNonBlocking();
@@ -140,6 +143,13 @@ bool TCPServer::authIP(std::string &ipAddr){
    }
    infile.close();
    return auth;
+}
+
+void TCPServer::writeLog(std::string log_input){
+   time_t curr_time = time(NULL);
+   std::string event_time = ctime(&curr_time);
+   std::cout << event_time;
+   _server_log << event_time;
 }
 
 /**********************************************************************************************

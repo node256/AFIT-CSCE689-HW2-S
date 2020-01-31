@@ -89,10 +89,7 @@ bool PasswdMgr::changePasswd(const char *name, const char *passwd) {
 
    // temp variables
    std::vector<uint8_t> hash, salt;
-   uint8_t hash_arr[hashlen];
-   uint8_t salt_arr[saltlen];
    std::string input;
-   char tmp;
 
    // open password file for binary read/write
    std::fstream pass_file;
@@ -104,6 +101,7 @@ bool PasswdMgr::changePasswd(const char *name, const char *passwd) {
 
          // write new hash & salt to user entry
          hashArgon2(hash,salt,passwd);
+         // would not have finished without Staricus http://www.cplusplus.com/forum/beginner/197490/
          pass_file.write(reinterpret_cast<char*>(&hash[0]), hashlen);
          pass_file.write(reinterpret_cast<char*>(&salt[0]), saltlen);
          break;
