@@ -129,10 +129,12 @@ void TCPConn::getUsername() {
    // take username input
    if (getUserInput(_username)){ 
       if ( sec.checkUser(_username.c_str())){
+         _auth = true;
          _status = s_passwd;
       }
       else {
          this->sendText("Unauthorized\n");
+         _auth = false;
          disconnect();
       }
    }
@@ -161,6 +163,7 @@ void TCPConn::getPasswd() {
       if (getUserInput(_newpwd)){ 
          if ( sec.checkPasswd(_username.c_str(), _newpwd.c_str())){
             _status = s_menu;
+            _auth = true;
             this->sendMenu();
             break;
          }
@@ -170,6 +173,7 @@ void TCPConn::getPasswd() {
 
    // disconnect if user failed to provide good password
    if (_status != s_menu ){
+      _auth = false;
       this->sendText("Unauthorized\n");
       disconnect();
    }
@@ -194,8 +198,9 @@ void TCPConn::changePassword() {
       if (getUserInput(_newpwd)){
          _status = s_confirmpwd;
       }
-      else{
+      else {
          this->sendText("Enter new password:");
+         _status = s_changepwd;
       }
    }
    if ( _status == s_confirmpwd ){
@@ -354,3 +359,26 @@ void TCPConn::getIPAddrStr(std::string &buf) {
    return _connfd.getIPAddrStr(buf);
 }
 
+/**********************************************************************************************
+ * auth - retrieves authorization bool
+ *
+ **********************************************************************************************/
+bool TCPConn::auth() {
+   return _auth;
+}
+
+/**********************************************************************************************
+ * pwd_attempts - retrieves number of password attempts
+ *
+ **********************************************************************************************/
+int TCPConn::pwd_attempts() {
+   return _pwd_attempts;
+}
+
+/**********************************************************************************************
+ * pwd_attempts - retrieves number of password attempts
+ *
+ **********************************************************************************************/
+//void TCPConn::user_name();{
+
+//}

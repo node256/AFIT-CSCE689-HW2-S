@@ -12,7 +12,9 @@
 #include <fstream>
 #include <memory>
 #include <sstream>
-#include <time.h>
+#include <ctime>
+#include <chrono>
+#include "strfuncts.h"
 #include "TCPServer.h"
 
 TCPServer::TCPServer(){ // :_server_log("server.log", 0) {
@@ -90,12 +92,24 @@ void TCPServer::listenSvr() {
          if (!authIP(ipaddr_str)) {
             new_conn->sendText("Connection failed!\n");
             new_conn->disconnect();
+            writeLog( "Unauthorized connection attempt from " + ipaddr_str );
          }
          else {         
             new_conn->sendText("Welcome to the CSCE 689 Server!\n");
-
+            writeLog( "Authorized connection from " + ipaddr_str );
             // Change this later
             new_conn->startAuthentication();
+            if ( !new_conn->auth()){
+               if ( new_conn->pwd_attempts()  ){
+                  writeLog("Password authorization failed for user @" + ipaddr_str );
+               }
+               else {
+                  writeLog("Unauthorized user @" + ipaddr_str );
+               }
+            }
+            else{
+               writeLog("User @ "  + ipaddr_str + " login successful" );
+            }
          }  
       }
 
@@ -106,6 +120,9 @@ void TCPServer::listenSvr() {
          // If the user lost connection
          if (!(*tptr)->isConnected()) {
             // Log it
+            std::string ipaddr_str;
+            (*tptr)->getIPAddrStr(ipaddr_str);
+            writeLog("User @ " + ipaddr_str + " disconnected");
 
             // Remove them from the connect list
             tptr = _connlist.erase(tptr);
@@ -146,10 +163,12 @@ bool TCPServer::authIP(std::string &ipAddr){
 }
 
 void TCPServer::writeLog(std::string log_input){
-   time_t curr_time = time(NULL);
-   std::string event_time = ctime(&curr_time);
-   std::cout << event_time;
-   _server_log << event_time;
+
+   time_t sys_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
+   std::string event_time = ctime(&sys_time);
+   clrNewlines(event_time);
+   _server_log << event_time << " " << log_input << "\n";
+   _server_log.flush();
 }
 
 /**********************************************************************************************
