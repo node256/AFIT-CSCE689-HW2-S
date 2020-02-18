@@ -174,7 +174,7 @@ void TCPConn::getPasswd() {
    // disconnect if user failed to provide good password
    if (_status != s_menu ){
       _auth = false;
-      this->sendText("Unauthorized\n");
+      this->sendText("\n");
       disconnect();
    }
 }

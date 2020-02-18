@@ -28,6 +28,10 @@ public:
    void changePassword();
    
    bool getUserInput(std::string &cmd);
+   bool auth();
+
+   int pwd_attempts();
+   void user_name();
 
    void disconnect();
    bool isConnected();
@@ -52,6 +56,8 @@ private:
    std::string _newpwd; // Used to store user input for changing passwords
 
    int _pwd_attempts = 0;
+
+   bool _auth = true;
 };
 
 
